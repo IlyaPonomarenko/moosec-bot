@@ -1,0 +1,34 @@
+services:
+  lavalink:
+    image: ghcr.io/lavalink-devs/lavalink:4
+    restart: unless-stopped
+    environment:
+      _JAVA_OPTIONS: "-Xmx1G"
+      LAVALINK_SERVER_PASSWORD: ${LAVALINK_PASSWORD}
+    env_file:
+      - lavalink.env # YouTube OAuth refresh token, see README
+    volumes:
+      - ./lavalink/application.yml:/opt/Lavalink/application.yml:ro
+      - ./lavalink/plugins:/opt/Lavalink/plugins
+      - ./lavalink/logs:/opt/Lavalink/logs
+    networks:
+      - internal
+    # No ports published. Only the bot can reach Lavalink.
+
+  bot:
+    build: .
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      LAVALINK_HOST: lavalink
+      LAVALINK_PORT: "2333"
+    depends_on:
+      - lavalink # the bot retries until Lavalink is up
+    volumes:
+      - ./data:/app/data # SQLite lives here from milestone 2
+    networks:
+      - internal
+
+networks:
+  internal:

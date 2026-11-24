@@ -1,0 +1,83 @@
+server:
+  port: 2333
+  address: 0.0.0.0
+  http2:
+    enabled: false
+
+lavalink:
+  plugins:
+    # YouTube source. Check https://github.com/lavalink-devs/youtube-source/releases
+    # and bump this when YouTube playback breaks.
+    - dependency: "dev.lavalink.youtube:youtube-plugin:1.18.2"
+      snapshot: false
+    # LavaSrc (Spotify) is added in milestone 3.
+
+  server:
+    # Overridden by the LAVALINK_SERVER_PASSWORD env var from docker-compose.
+    password: "change-me"
+    sources:
+      youtube: false # required: the built-in YouTube source is deprecated, the plugin replaces it
+      soundcloud: true
+      bandcamp: true
+      twitch: false
+      vimeo: false
+      nico: false
+      http: true
+      local: false
+
+    # ---- Audio quality ----
+    # Max Opus encoder quality (0-10). Costs CPU, fine for one server.
+    opusEncodingQuality: 10
+    # Resampling quality: LOW | MEDIUM | HIGH. Default is LOW.
+    resamplingQuality: HIGH
+    # 10 s of decoded audio buffered, so short network hiccups don't stutter.
+    frameBufferDurationMs: 10000
+    bufferDurationMs: 400
+    # --------------------------------
+
+    trackStuckThresholdMs: 10000
+    useSeekGhosting: true
+    playerUpdateInterval: 5
+    youtubeSearchEnabled: true
+    soundcloudSearchEnabled: true
+    gc-warnings: true
+
+plugins:
+  youtube:
+    enabled: true
+    allowSearch: true # enables ytsearch: and ytmsearch:
+    allowDirectVideoIds: true
+    allowDirectPlaylistIds: true
+    # Queried in order. MUSIC handles YouTube Music search but cannot play.
+    # TV plays when signed in with OAuth. The rest are fallbacks.
+    clients:
+      - MUSIC
+      - TV
+      - TVHTML5_SIMPLY
+      - ANDROID_VR
+      - WEB
+      - WEBEMBEDDED
+    oauth:
+      # Sign in with a SPARE Google account. Never your main one.
+      # First start: Lavalink logs a google.com/device URL and a code. Open it, sign in.
+      # Lavalink then logs a refresh token. Put it in .env as YOUTUBE_REFRESH_TOKEN
+      # and restart. After that no sign-in is needed.
+      enabled: true
+      # refreshToken and skipInitialization come from env vars:
+      # PLUGINS_YOUTUBE_OAUTH_REFRESHTOKEN, PLUGINS_YOUTUBE_OAUTH_SKIPINITIALIZATION
+
+metrics:
+  prometheus:
+    enabled: false
+
+logging:
+  file:
+    path: ./logs/
+  level:
+    root: INFO
+    lavalink: INFO
+    dev.lavalink.youtube: INFO
+  logback:
+    rollingpolicy:
+      max-file-size: 50MB
+      max-history: 7
